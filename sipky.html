@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Šipky 501</title>
+<style>
+  :root{
+    --bg:#10231a;
+    --panel-bg:#17332e;
+    --panel-active:#1f4a3a;
+    --accent:#e23b3b;
+    --accent2:#2e9e5b;
+    --text:#f2f2ea;
+    --muted:#9db3a6;
+    --key-bg:#1f4a3a;
+    --key-bg-hover:#2a5f4b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI",system-ui,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+  }
+  h1{
+    text-align:center;
+    margin:0;
+    padding:18px 10px 6px;
+    font-size:clamp(22px,4vw,34px);
+    letter-spacing:1px;
+  }
+  .sub{text-align:center;color:var(--muted);margin-bottom:10px;font-size:14px;}
+
+  /* ---------- SETUP SCREEN ---------- */
+  #setupScreen{max-width:560px;margin:0 auto;padding:10px 16px 40px;}
+  .card{
+    background:var(--panel-bg);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .player-count-row{display:flex;gap:10px;justify-content:center;margin-bottom:6px;}
+  .count-btn{
+    flex:1;
+    padding:14px 0;
+    font-size:20px;
+    border-radius:10px;
+    border:2px solid var(--key-bg);
+    background:var(--key-bg);
+    color:var(--text);
+    cursor:pointer;
+  }
+  .count-btn.active{
+    background:var(--accent2);
+    border-color:var(--accent2);
+    font-weight:bold;
+  }
+  .name-row{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  .name-row label{min-width:80px;color:var(--muted);}
+  .name-row input{
+    flex:1;
+    padding:10px 12px;
+    font-size:16px;
+    border-radius:8px;
+    border:1px solid #2a5f4b;
+    background:#0f251c;
+    color:var(--text);
+  }
+  #startBtn{
+    display:block;
+    width:100%;
+    padding:16px;
+    font-size:20px;
+    font-weight:bold;
+    border-radius:10px;
+    border:none;
+    background:var(--accent);
+    color:white;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  #startBtn:active{transform:scale(0.98);}
+
+  /* ---------- GAME SCREEN ---------- */
+  #gameScreen{display:none;flex-direction:column;}
+  .top-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 16px;
+  }
+  .leg-info{color:var(--muted);font-size:14px;}
+  .top-bar button{
+    padding:8px 14px;
+    font-size:14px;
+    border-radius:8px;
+    border:1px solid #2a5f4b;
+    background:var(--key-bg);
+    color:var(--text);
+    cursor:pointer;
+  }
+
+  .players-wrap{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:10px;
+    padding:0 12px;
+  }
+  .player-panel{
+    background:var(--panel-bg);
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+    border:3px solid transparent;
+    position:relative;
+  }
+  .player-panel.active{
+    border-color:var(--accent2);
+    background:var(--panel-active);
+  }
+  .player-name{font-size:24px;color:var(--muted);margin-bottom:4px;word-break:break-word;}
+  .player-panel.active .player-name{color:var(--text);font-weight:bold;}
+  .player-score{font-size:clamp(34px,8vw,54px);font-weight:bold;line-height:1;}
+  .player-meta{font-size:17px;color:var(--muted);margin-top:6px;}
+  .player-legs{font-size:19px;color:var(--accent2);margin-top:4px;font-weight:bold;}
+  .checkout-tip{
+    margin-top:8px;
+    font-size:14px;
+    color:#ffd766;
+    min-height:18px;
+    font-weight:bold;
+  }
+
+  .entry-area{
+    margin:10px auto 2px;
+    text-align:center;
+  }
+  #scoreDisplay{
+    font-size:clamp(36px,10vw,56px);
+    font-weight:bold;
+    background:#0f251c;
+    border:2px solid #2a5f4b;
+    border-radius:12px;
+    min-width:160px;
+    display:inline-block;
+    padding:6px 24px;
+    letter-spacing:2px;
+  }
+  #entryError{color:var(--accent);min-height:20px;font-size:14px;margin-top:4px;}
+
+  .keypad{
+    max-width:400px;
+    width:100%;
+    margin:6px auto 10px;
+    padding:0 12px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+  }
+  .key{
+    height:clamp(46px,8vh,68px);
+    padding:0;
+    font-size:28px;
+    border-radius:12px;
+    border:none;
+    background:var(--key-bg);
+    color:var(--text);
+    cursor:pointer;
+  }
+
+  /* ---------- KRUHOVÝ UKAZATEL V PANELU HRÁČE ---------- */
+  .ring{
+    position:relative;
+    width:clamp(100px,16vh,150px);
+    margin:2px auto 0;
+  }
+  .ring svg{width:100%;height:auto;display:block;transform:rotate(-90deg);}
+  .ring .track{fill:none;stroke:#2a4a3e;stroke-width:10;}
+  .ring .bar{
+    fill:none;
+    stroke:var(--muted);
+    stroke-width:10;
+    stroke-linecap:round;
+    transition:stroke-dashoffset 0.5s ease, stroke 0.3s;
+  }
+  .player-panel.active .ring .bar{stroke:var(--accent2);}
+  .ring.finish .bar,.player-panel.active .ring.finish .bar{stroke:#ffd766;}
+  .ring .player-score{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* Úzký displej (mobil) */
+  @media (max-width:700px){
+    .players-wrap{grid-template-columns:1fr 1fr;gap:6px;padding:0 8px;}
+    .player-panel{padding:6px;}
+    .player-name{font-size:16px;margin-bottom:0;}
+    .player-score{font-size:24px;}
+    .ring{width:clamp(70px,11vh,95px);}
+    .ring .track,.ring .bar{stroke-width:9;}
+    .player-meta{font-size:12px;margin-top:2px;}
+    .player-legs{font-size:13px;margin-top:2px;}
+    .checkout-tip{font-size:12px;margin-top:2px;min-height:0;}
+    h1{padding:6px 10px 0;font-size:20px;}
+    .sub{display:none;}
+    .top-bar{padding:4px 12px;}
+    .entry-area{margin:6px auto 0;}
+    #scoreDisplay{font-size:30px;padding:2px 16px;min-width:120px;}
+    #entryError{min-height:16px;font-size:13px;margin-top:0;}
+    .keypad{gap:8px;margin-top:2px;}
+    .key{height:clamp(44px,6.5vh,60px);font-size:24px;}
+  }
+  .key:active{background:var(--key-bg-hover);}
+  .key.ok{background:var(--accent2);font-weight:bold;}
+  .key.back{background:#4a3030;}
+
+  .bottom-actions{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .bottom-actions button{
+    padding:10px 18px;
+    font-size:15px;
+    border-radius:8px;
+    border:1px solid #2a5f4b;
+    background:var(--key-bg);
+    color:var(--text);
+    cursor:pointer;
+  }
+  .bottom-actions button:disabled{opacity:0.4;cursor:default;}
+
+  /* ---------- OVERLAYS ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:16px;
+  }
+  .overlay.show{display:flex;}
+  .overlay-card{
+    background:var(--panel-bg);
+    border-radius:14px;
+    padding:24px;
+    max-width:420px;
+    width:100%;
+    text-align:center;
+  }
+  .overlay-card h2{margin-top:0;}
+  .overlay-card .row{display:flex;gap:12px;margin-top:18px;}
+  .overlay-card .row button{
+    flex:1;
+    padding:14px;
+    font-size:18px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    color:white;
+  }
+  .btn-yes{background:var(--accent2);}
+  .btn-no{background:var(--accent);}
+  .btn-neutral{background:var(--key-bg);color:var(--text);}
+
+  #toast{
+    position:fixed;
+    bottom:18px;left:50%;
+    transform:translateX(-50%);
+    background:#222;
+    color:white;
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:15px;
+    display:none;
+    z-index:60;
+    max-width:90%;
+    text-align:center;
+  }
+
+  .summary-table{width:100%;border-collapse:collapse;margin-top:10px;}
+  .summary-table th,.summary-table td{padding:8px;border-bottom:1px solid #2a5f4b;text-align:left;}
+  .summary-table th:last-child,.summary-table td:last-child{text-align:right;}
+</style>
+</head>
+<body>
+
+<h1>Šipky 501</h1>
+<div class="sub">Double out</div>
+
+<div id="setupScreen">
+  <div class="card">
+    <div style="color:var(--muted);margin-bottom:8px;">Počet hráčů</div>
+    <div class="player-count-row" id="countRow">
+      <button class="count-btn" data-count="2">2</button>
+      <button class="count-btn" data-count="3">3</button>
+      <button class="count-btn" data-count="4">4</button>
+    </div>
+  </div>
+  <div class="card" id="namesCard">
+    <div style="color:var(--muted);margin-bottom:4px;">Jména hráčů</div>
+    <div id="nameRows"></div>
+  </div>
+  <button id="startBtn">Začít hru</button>
+</div>
+
+<div id="gameScreen">
+  <div class="top-bar">
+    <div class="leg-info" id="legInfo">Leg 1</div>
+    <button id="endGameBtn">Konec hry</button>
+  </div>
+
+  <div class="players-wrap" id="playersWrap"></div>
+
+  <div class="entry-area">
+    <div id="scoreDisplay">0</div>
+    <div id="entryError"></div>
+  </div>
+
+  <div class="keypad">
+    <button class="key" data-digit="1">1</button>
+    <button class="key" data-digit="2">2</button>
+    <button class="key" data-digit="3">3</button>
+    <button class="key" data-digit="4">4</button>
+    <button class="key" data-digit="5">5</button>
+    <button class="key" data-digit="6">6</button>
+    <button class="key" data-digit="7">7</button>
+    <button class="key" data-digit="8">8</button>
+    <button class="key" data-digit="9">9</button>
+    <button class="key back" id="backBtn">⌫</button>
+    <button class="key" data-digit="0">0</button>
+    <button class="key ok" id="okBtn">OK</button>
+  </div>
+
+  <div class="bottom-actions">
+    <button id="undoBtn" disabled>Zpět (undo)</button>
+  </div>
+</div>
+
+<div class="overlay" id="checkoutModal">
+  <div class="overlay-card">
+    <h2>Zakončení?</h2>
+    <p id="checkoutText"></p>
+    <p style="color:var(--muted);">Bylo poslední zasažení na dvojku (double)?</p>
+    <div class="row">
+      <button class="btn-yes" id="checkoutYes">Ano, double</button>
+      <button class="btn-no" id="checkoutNo">Ne</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="endSummary">
+  <div class="overlay-card">
+    <h2>Konec hry</h2>
+    <table class="summary-table" id="summaryTable">
+      <thead><tr><th>Hráč</th><th>Legy</th><th>Průměr</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="row">
+      <button class="btn-neutral" id="backToGameBtn">Zpět do hry</button>
+      <button class="btn-yes" id="newGameBtn">Nová hra</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var START_SCORE = 501;
+
+  function computeValidRoundScores(){
+    var singles = {};
+    singles[0]=true; singles[25]=true; singles[50]=true;
+    for(var n=1;n<=20;n++){ singles[n]=true; singles[2*n]=true; singles[3*n]=true; }
+    var arr = Object.keys(singles).map(Number);
+    var valid = {};
+    for(var i=0;i<arr.length;i++){
+      for(var j=0;j<arr.length;j++){
+        for(var k=0;k<arr.length;k++){
+          valid[arr[i]+arr[j]+arr[k]] = true;
+        }
+      }
+    }
+    return valid;
+  }
+  var VALID_ROUND_SCORES = computeValidRoundScores();
+
+  var DOUBLES = [];
+  for(var nd=1;nd<=20;nd++) DOUBLES.push({label:'D'+nd, value:2*nd});
+  DOUBLES.push({label:'Bull', value:50});
+
+  var THROWS = [];
+  for(var nt=20;nt>=1;nt--) THROWS.push({label:'T'+nt, value:3*nt});
+  for(var nt2=20;nt2>=1;nt2--) THROWS.push({label:'D'+nt2, value:2*nt2});
+  for(var nt3=20;nt3>=1;nt3--) THROWS.push({label:''+nt3, value:nt3});
+  THROWS.push({label:'25', value:25});
+
+  function suggestCheckout(remaining){
+    if(remaining<2 || remaining>170) return null;
+    for(var a=0;a<DOUBLES.length;a++){
+      if(DOUBLES[a].value===remaining) return [DOUBLES[a].label];
+    }
+    for(var i=0;i<THROWS.length;i++){
+      var rem2 = remaining - THROWS[i].value;
+      for(var d=0;d<DOUBLES.length;d++){
+        if(DOUBLES[d].value===rem2) return [THROWS[i].label, DOUBLES[d].label];
+      }
+    }
+    for(var i2=0;i2<THROWS.length;i2++){
+      for(var j2=0;j2<THROWS.length;j2++){
+        var rem3 = remaining - THROWS[i2].value - THROWS[j2].value;
+        for(var d2=0;d2<DOUBLES.length;d2++){
+          if(DOUBLES[d2].value===rem3) return [THROWS[i2].label, THROWS[j2].label, DOUBLES[d2].label];
+        }
+      }
+    }
+    return null;
+  }
+
+  var state = null;
+  var undoStack = [];
+  var pendingCheckoutValue = null;
+
+  var setupScreen = document.getElementById('setupScreen');
+  var gameScreen = document.getElementById('gameScreen');
+  var countRow = document.getElementById('countRow');
+  var nameRows = document.getElementById('nameRows');
+  var startBtn = document.getElementById('startBtn');
+  var playersWrap = document.getElementById('playersWrap');
+  var scoreDisplay = document.getElementById('scoreDisplay');
+  var entryError = document.getElementById('entryError');
+  var legInfo = document.getElementById('legInfo');
+  var undoBtn = document.getElementById('undoBtn');
+  var endGameBtn = document.getElementById('endGameBtn');
+  var checkoutModal = document.getElementById('checkoutModal');
+  var checkoutText = document.getElementById('checkoutText');
+  var checkoutYes = document.getElementById('checkoutYes');
+  var checkoutNo = document.getElementById('checkoutNo');
+  var endSummary = document.getElementById('endSummary');
+  var summaryTable = document.getElementById('summaryTable').querySelector('tbody');
+  var backToGameBtn = document.getElementById('backToGameBtn');
+  var newGameBtn = document.getElementById('newGameBtn');
+  var toast = document.getElementById('toast');
+
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var RING_R = 52;
+  var RING_LEN = 2 * Math.PI * RING_R;
+  var panels = [];
+  var selectedCount = 2;
+  var currentInput = '';
+
+  function renderNameRows(){
+    nameRows.innerHTML = '';
+    for(var i=0;i<selectedCount;i++){
+      var row = document.createElement('div');
+      row.className = 'name-row';
+      var label = document.createElement('label');
+      label.textContent = 'Hráč ' + (i+1);
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = 20;
+      input.placeholder = 'Hráč ' + (i+1);
+      input.id = 'nameInput' + i;
+      row.appendChild(label);
+      row.appendChild(input);
+      nameRows.appendChild(row);
+    }
+  }
+
+  countRow.addEventListener('click', function(e){
+    var btn = e.target.closest('.count-btn');
+    if(!btn) return;
+    selectedCount = parseInt(btn.getAttribute('data-count'), 10);
+    Array.prototype.forEach.call(countRow.querySelectorAll('.count-btn'), function(b){
+      b.classList.toggle('active', b===btn);
+    });
+    renderNameRows();
+  });
+
+  countRow.querySelector('[data-count="2"]').classList.add('active');
+  renderNameRows();
+
+  startBtn.addEventListener('click', function(){
+    var players = [];
+    for(var i=0;i<selectedCount;i++){
+      var input = document.getElementById('nameInput'+i);
+      var name = (input.value || '').trim();
+      if(!name) name = 'Hráč ' + (i+1);
+      players.push({
+        name: name,
+        score: START_SCORE,
+        legsWon: 0,
+        totalDarts: 0,
+        totalScored: 0
+      });
+    }
+    state = {
+      players: players,
+      currentPlayerIndex: 0,
+      legStartPlayerIndex: 0,
+      legNumber: 1
+    };
+    undoStack = [];
+    currentInput = '';
+    setupScreen.style.display = 'none';
+    gameScreen.style.display = 'flex';
+    buildPanels();
+    render();
+  });
+
+  function average(p){
+    if(p.totalDarts===0) return '0.0';
+    return (p.totalScored / p.totalDarts * 3).toFixed(1);
+  }
+
+  // Panely hráčů se postaví jednou na začátku hry, pak se jen aktualizují
+  // (díky tomu se kruh kolem skóre ubírá plynule)
+  function buildPanels(){
+    playersWrap.innerHTML = '';
+    panels = [];
+    state.players.forEach(function(){
+      var panel = document.createElement('div');
+      panel.className = 'player-panel';
+
+      var nameDiv = document.createElement('div');
+      nameDiv.className = 'player-name';
+
+      var ring = document.createElement('div');
+      ring.className = 'ring';
+      var svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 120 120');
+      var track = document.createElementNS(SVG_NS, 'circle');
+      track.setAttribute('class', 'track');
+      var bar = document.createElementNS(SVG_NS, 'circle');
+      bar.setAttribute('class', 'bar');
+      [track, bar].forEach(function(c){
+        c.setAttribute('cx', '60');
+        c.setAttribute('cy', '60');
+        c.setAttribute('r', RING_R);
+      });
+      bar.setAttribute('stroke-dasharray', RING_LEN);
+      svg.appendChild(track);
+      svg.appendChild(bar);
+      var scoreDiv = document.createElement('div');
+      scoreDiv.className = 'player-score';
+      ring.appendChild(svg);
+      ring.appendChild(scoreDiv);
+
+      var metaDiv = document.createElement('div');
+      metaDiv.className = 'player-meta';
+      var legsDiv = document.createElement('div');
+      legsDiv.className = 'player-legs';
+      var tipDiv = document.createElement('div');
+      tipDiv.className = 'checkout-tip';
+
+      panel.appendChild(nameDiv);
+      panel.appendChild(ring);
+      panel.appendChild(metaDiv);
+      panel.appendChild(legsDiv);
+      panel.appendChild(tipDiv);
+      playersWrap.appendChild(panel);
+      panels.push({panel: panel, name: nameDiv, ring: ring, bar: bar, score: scoreDiv,
+                   meta: metaDiv, legs: legsDiv, tip: tipDiv});
+    });
+  }
+
+  function render(){
+    legInfo.textContent = 'Leg ' + state.legNumber;
+    state.players.forEach(function(p, idx){
+      var el = panels[idx];
+      var active = idx === state.currentPlayerIndex;
+      el.panel.classList.toggle('active', active);
+      el.name.textContent = (active ? '> ' : '') + p.name;
+      el.score.textContent = p.score;
+      var left = Math.max(0, Math.min(p.score, START_SCORE)) / START_SCORE;
+      el.bar.setAttribute('stroke-dashoffset', RING_LEN * (1 - left));
+      el.ring.classList.toggle('finish', p.score <= 170 && p.score > 1);
+      el.meta.textContent = 'Průměr: ' + average(p) + ' | Šipek: ' + p.totalDarts;
+      el.legs.textContent = 'Vyhráno legů: ' + p.legsWon;
+      var sugg = active ? suggestCheckout(p.score) : null;
+      el.tip.textContent = sugg ? 'Tip: ' + sugg.join(' -> ') : '';
+    });
+
+    scoreDisplay.textContent = currentInput === '' ? '0' : currentInput;
+    undoBtn.disabled = undoStack.length === 0;
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ toast.style.display = 'none'; }, 2200);
+  }
+
+  function showError(msg){
+    entryError.textContent = msg;
+    clearTimeout(entryError._t);
+    entryError._t = setTimeout(function(){ entryError.textContent=''; }, 2000);
+  }
+
+  function appendDigit(d){
+    if(currentInput.length >= 3) return;
+    if(currentInput === '0') currentInput = '';
+    currentInput += d;
+    render();
+  }
+  function backspace(){
+    currentInput = currentInput.slice(0, -1);
+    render();
+  }
+  function clearInput(){
+    currentInput = '';
+    render();
+  }
+
+  document.querySelectorAll('.key[data-digit]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      appendDigit(btn.getAttribute('data-digit'));
+    });
+  });
+  document.getElementById('backBtn').addEventListener('click', backspace);
+  document.getElementById('okBtn').addEventListener('click', submitScore);
+
+  window.addEventListener('keydown', function(e){
+    if(gameScreen.style.display !== 'flex') return;
+    if(checkoutModal.classList.contains('show')) return;
+    if(endSummary.classList.contains('show')) return;
+    if(e.key >= '0' && e.key <= '9'){
+      appendDigit(e.key);
+    } else if(e.key === 'Backspace'){
+      e.preventDefault();
+      backspace();
+    } else if(e.key === 'Enter'){
+      submitScore();
+    } else if(e.key.toLowerCase() === 'u'){
+      doUndo();
+    }
+  });
+
+  function snapshot(){
+    undoStack.push(JSON.parse(JSON.stringify(state)));
+    undoBtn.disabled = false;
+  }
+  function doUndo(){
+    if(undoStack.length === 0) return;
+    state = undoStack.pop();
+    clearInput();
+    render();
+    showToast('Vráceno zpět');
+  }
+  undoBtn.addEventListener('click', doUndo);
+
+  function advanceTurn(){
+    state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+  }
+
+  function startNextLeg(){
+    state.players.forEach(function(p){ p.score = START_SCORE; });
+    state.legNumber += 1;
+    state.legStartPlayerIndex = (state.legStartPlayerIndex + 1) % state.players.length;
+    state.currentPlayerIndex = state.legStartPlayerIndex;
+  }
+
+  function submitScore(){
+    if(currentInput === ''){
+      showError('Zadej skóre kola');
+      return;
+    }
+    var value = parseInt(currentInput, 10);
+    if(isNaN(value) || value < 0 || value > 180){
+      showError('Neplatné skóre (0-180)');
+      clearInput();
+      return;
+    }
+    if(!VALID_ROUND_SCORES[value]){
+      showError('Takové skóre nelze třemi šipkami hodit');
+      clearInput();
+      return;
+    }
+
+    var player = state.players[state.currentPlayerIndex];
+    var remaining = player.score;
+
+    snapshot();
+
+    if(value === remaining){
+      pendingCheckoutValue = value;
+      checkoutText.textContent = player.name + ' potřebuje přesně ' + value + ' na zakončení.';
+      checkoutModal.classList.add('show');
+      return;
+    }
+
+    var newRemaining = remaining - value;
+    player.totalDarts += 3;
+    if(newRemaining < 0 || newRemaining === 1){
+      showToast(player.name + ' přešel(a)! Skóre zůstává ' + remaining);
+      advanceTurn();
+    } else {
+      player.score = newRemaining;
+      player.totalScored += value;
+      advanceTurn();
+    }
+    clearInput();
+    render();
+  }
+
+  function finalizeCheckout(wasDouble){
+    checkoutModal.classList.remove('show');
+    var player = state.players[state.currentPlayerIndex];
+    player.totalDarts += 3;
+    if(wasDouble){
+      player.score = 0;
+      player.totalScored += pendingCheckoutValue;
+      player.legsWon += 1;
+      showToast('Vyhrál(a) ' + player.name + ' - leg ' + state.legNumber + '!');
+      startNextLeg();
+    } else {
+      showToast(player.name + ' přešel(a) - zakončení musí být na dvojku!');
+      advanceTurn();
+    }
+    pendingCheckoutValue = null;
+    clearInput();
+    render();
+  }
+
+  checkoutYes.addEventListener('click', function(){ finalizeCheckout(true); });
+  checkoutNo.addEventListener('click', function(){ finalizeCheckout(false); });
+
+  function renderSummary(){
+    summaryTable.innerHTML = '';
+    var sorted = state.players.slice().sort(function(a,b){ return b.legsWon - a.legsWon; });
+    sorted.forEach(function(p){
+      var tr = document.createElement('tr');
+      var tdName = document.createElement('td');
+      tdName.textContent = p.name;
+      var tdLegs = document.createElement('td');
+      tdLegs.textContent = p.legsWon;
+      var tdAvg = document.createElement('td');
+      tdAvg.textContent = average(p);
+      tr.appendChild(tdName);
+      tr.appendChild(tdLegs);
+      tr.appendChild(tdAvg);
+      summaryTable.appendChild(tr);
+    });
+  }
+
+  endGameBtn.addEventListener('click', function(){
+    renderSummary();
+    endSummary.classList.add('show');
+  });
+  backToGameBtn.addEventListener('click', function(){
+    endSummary.classList.remove('show');
+  });
+  newGameBtn.addEventListener('click', function(){
+    endSummary.classList.remove('show');
+    gameScreen.style.display = 'none';
+    setupScreen.style.display = 'block';
+    state = null;
+    undoStack = [];
+    currentInput = '';
+  });
+
+})();
+</script>
+</body>
+</html>
