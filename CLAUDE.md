@@ -3,7 +3,12 @@
 Jednoduchá webová aplikace na počítání šipek, celá v jednom souboru `sipky.html`
 (styly i skripty uvnitř, žádné knihovny, žádný server – otevírá se přímo v prohlížeči).
 
-GitHub: https://github.com/Vranik007/sipky (soukromý repozitář, větev `main`)
+GitHub: https://github.com/Vranik007/sipky (veřejný repozitář, větev `main`)
+
+**Živá stránka:** https://vranik007.github.io/sipky/ (GitHub Pages z větve `main`, kořen).
+Každý push na `main` stránku do ~1 minuty sám aktualizuje. `index.html` jen
+přesměrovává na `sipky.html`. Repozitář je veřejný, protože Pages na bezplatném
+účtu jinak nejdou – nikdy do něj nedávat hesla ani osobní údaje.
 
 ## Pravidla hry v aplikaci
 - Hra 501, **double out** (zakončení musí být na dvojku nebo bull).
