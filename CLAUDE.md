@@ -10,6 +10,11 @@ Každý push na `main` stránku do ~1 minuty sám aktualizuje. `index.html` jen
 přesměrovává na `sipky.html`. Repozitář je veřejný, protože Pages na bezplatném
 účtu jinak nejdou – nikdy do něj nedávat hesla ani osobní údaje.
 
+**Instalace na telefon:** `manifest.webmanifest` + ikony (`icon-192.png`, `icon-512.png`,
+`apple-touch-icon.png` – terč v barvách aplikace) umožní „Přidat na plochu“ a otevírání
+přes celou obrazovku bez adresního řádku. Ikony byly vygenerovány krátkým Python skriptem
+bez knihoven (PIL v počítači není) – při změně ikony je potřeba je vygenerovat znovu.
+
 ## Pravidla hry v aplikaci
 - Hra 501, **double out** (zakončení musí být na dvojku nebo bull).
 - 2–4 hráči, zadává se součet bodů za kolo (3 šipky) přes klávesnici na obrazovce.
