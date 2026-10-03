@@ -17,7 +17,8 @@ bez knihoven (PIL v počítači není) – při změně ikony je potřeba je vyg
 
 ## Pravidla hry v aplikaci
 - Hra 501, **double out** (zakončení musí být na dvojku nebo bull).
-- 2–4 hráči, zadává se součet bodů za kolo (3 šipky) přes klávesnici na obrazovce.
+- 1–4 hráči (1 = trénink; panel jediného hráče má na mobilu celou šířku – třída `solo`),
+  zadává se součet bodů za kolo (3 šipky) přes klávesnici na obrazovce.
 - Neplatná skóre (nad 180 nebo nehoditelná třemi šipkami) se odmítnou.
 - Přehoz (pod 0 nebo zbyde 1) = skóre zůstává, hraje další hráč.
 - Při přesném dohození na 0 se aplikace zeptá, jestli to byla dvojka.

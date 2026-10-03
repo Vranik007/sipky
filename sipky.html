@@ -208,6 +208,7 @@
   /* Úzký displej (mobil) */
   @media (max-width:700px){
     .players-wrap{grid-template-columns:1fr 1fr;gap:6px;padding:0 8px;}
+    .players-wrap.solo{grid-template-columns:1fr;}
     .player-panel{padding:6px;}
     .player-name{font-size:16px;margin-bottom:0;}
     .player-score{font-size:24px;}
@@ -309,6 +310,7 @@
   <div class="card">
     <div style="color:var(--muted);margin-bottom:8px;">Počet hráčů</div>
     <div class="player-count-row" id="countRow">
+      <button class="count-btn" data-count="1">1</button>
       <button class="count-btn" data-count="2">2</button>
       <button class="count-btn" data-count="3">3</button>
       <button class="count-btn" data-count="4">4</button>
@@ -537,6 +539,7 @@
   // (díky tomu se kruh kolem skóre ubírá plynule)
   function buildPanels(){
     playersWrap.innerHTML = '';
+    playersWrap.classList.toggle('solo', state.players.length === 1);
     panels = [];
     state.players.forEach(function(){
       var panel = document.createElement('div');
